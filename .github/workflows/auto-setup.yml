@@ -1,0 +1,623 @@
+name: 🚀 Auto-Setup Project
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Create Project Structure
+      run: |
+        # Créer la structure de dossiers
+        mkdir -p app/src/main/java/com/scan3d
+        mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/values
+        mkdir -p app/src/main/res/mipmap-xxxhdpi
+        mkdir -p gradle/wrapper
+        mkdir -p .github/workflows
+        
+        # Créer build.gradle (root)
+        cat > build.gradle << 'EOF'
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.1.4'
+            }
+        }
+        
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        
+        task clean(type: Delete) {
+            delete rootProject.buildDir
+        }
+        EOF
+        
+        # Créer settings.gradle
+        cat > settings.gradle << 'EOF'
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        
+        rootProject.name = "Scan3D"
+        include ':app'
+        EOF
+        
+        # Créer gradle.properties
+        cat > gradle.properties << 'EOF'
+        org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+        android.useAndroidX=true
+        android.enableJetifier=true
+        android.nonTransitiveRClass=false
+        EOF
+        
+        # Créer app/build.gradle
+        cat > app/build.gradle << 'EOF'
+        plugins {
+            id 'com.android.application'
+        }
+        
+        android {
+            namespace 'com.scan3d'
+            compileSdk 34
+            
+            defaultConfig {
+                applicationId "com.scan3d"
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName "1.0"
+            }
+            
+            buildTypes {
+                release {
+                    minifyEnabled false
+                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                }
+            }
+            
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+        
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.11.0'
+            implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+            implementation 'com.google.ar:core:1.41.0'
+            implementation 'com.google.android.gms:play-services-location:21.1.0'
+            implementation 'androidx.camera:camera-camera2:1.3.1'
+            implementation 'androidx.camera:camera-lifecycle:1.3.1'
+            implementation 'androidx.camera:camera-view:1.3.1'
+        }
+        EOF
+        
+        # Créer gradle-wrapper.properties
+        cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
+        distributionBase=GRADLE_USER_HOME
+        distributionPath=wrapper/dists
+        distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+        networkTimeout=10000
+        validateDistributionUrl=true
+        zipStoreBase=GRADLE_USER_HOME
+        zipStorePath=wrapper/dists
+        EOF
+        
+        # Créer AndroidManifest.xml
+        cat > app/src/main/AndroidManifest.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+                android:maxSdkVersion="28" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+                android:maxSdkVersion="32" />
+            
+            <uses-feature android:name="android.hardware.camera.ar" android:required="false"/>
+            <uses-feature android:name="android.hardware.camera.autofocus" />
+            <uses-feature android:name="android.hardware.location.gps" />
+        
+            <application
+                android:allowBackup="true"
+                android:icon="@mipmap/ic_launcher"
+                android:label="@string/app_name"
+                android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+                android:requestLegacyExternalStorage="true">
+                
+                <meta-data
+                    android:name="com.google.ar.core"
+                    android:value="optional" />
+                
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true"
+                    android:screenOrientation="portrait">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
+        
+        # Créer strings.xml
+        cat > app/src/main/res/values/strings.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <string name="app_name">Scan3D</string>
+        </resources>
+        EOF
+        
+        # Créer MainActivity.java (version complète ci-dessous)
+        
+        # Créer activity_main.xml (version complète ci-dessous)
+        
+        # Télécharger gradle wrapper
+        wget https://services.gradle.org/distributions/gradle-8.2-bin.zip -O gradle.zip
+        unzip -q gradle.zip
+        gradle-8.2/bin/gradle wrapper
+        rm -rf gradle-8.2 gradle.zip
+        
+    - name: Create MainActivity.java
+      run: |
+        cat > app/src/main/java/com/scan3d/MainActivity.java << 'JAVAEOF'
+        package com.scan3d;
+        
+        import android.Manifest;
+        import android.content.pm.PackageManager;
+        import android.location.Location;
+        import android.location.LocationListener;
+        import android.location.LocationManager;
+        import android.os.Bundle;
+        import android.widget.Button;
+        import android.widget.TextView;
+        import android.widget.Toast;
+        import androidx.annotation.NonNull;
+        import androidx.appcompat.app.AppCompatActivity;
+        import androidx.core.app.ActivityCompat;
+        import androidx.core.content.ContextCompat;
+        import java.io.File;
+        import java.io.FileWriter;
+        import java.io.IOException;
+        import java.text.SimpleDateFormat;
+        import java.util.ArrayList;
+        import java.util.Date;
+        import java.util.Locale;
+        
+        public class MainActivity extends AppCompatActivity {
+            
+            private static final int PERMISSIONS_REQUEST = 100;
+            private static final String[] REQUIRED_PERMISSIONS = {
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+            
+            private LocationManager locationManager;
+            private Location currentLocation;
+            private boolean isScanning = false;
+            private ArrayList<ScanPoint> scanPoints;
+            
+            private TextView tvStatus, tvCoordinates, tvPointCount;
+            private Button btnStartScan, btnStopScan, btnSave;
+            
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_main);
+                
+                initViews();
+                scanPoints = new ArrayList<>();
+                
+                if (checkPermissions()) {
+                    initializeLocation();
+                } else {
+                    requestPermissions();
+                }
+                
+                setupButtons();
+            }
+            
+            private void initViews() {
+                tvStatus = findViewById(R.id.tvStatus);
+                tvCoordinates = findViewById(R.id.tvCoordinates);
+                tvPointCount = findViewById(R.id.tvPointCount);
+                btnStartScan = findViewById(R.id.btnStartScan);
+                btnStopScan = findViewById(R.id.btnStopScan);
+                btnSave = findViewById(R.id.btnSave);
+                
+                btnStopScan.setEnabled(false);
+                btnSave.setEnabled(false);
+            }
+            
+            private void setupButtons() {
+                btnStartScan.setOnClickListener(v -> startScanning());
+                btnStopScan.setOnClickListener(v -> stopScanning());
+                btnSave.setOnClickListener(v -> saveScan());
+            }
+            
+            private boolean checkPermissions() {
+                for (String permission : REQUIRED_PERMISSIONS) {
+                    if (ContextCompat.checkSelfPermission(this, permission) 
+                        != PackageManager.PERMISSION_GRANTED) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            private void requestPermissions() {
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST);
+            }
+            
+            @Override
+            public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+                                                  @NonNull int[] grantResults) {
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                if (requestCode == PERMISSIONS_REQUEST) {
+                    if (checkPermissions()) {
+                        initializeLocation();
+                    } else {
+                        Toast.makeText(this, "Permissions requises!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+            
+            private void initializeLocation() {
+                locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+                
+                LocationListener locationListener = new LocationListener() {
+                    @Override
+                    public void onLocationChanged(@NonNull Location location) {
+                        currentLocation = location;
+                        updateLocationUI();
+                    }
+                    
+                    @Override
+                    public void onProviderEnabled(@NonNull String provider) {}
+                    
+                    @Override
+                    public void onProviderDisabled(@NonNull String provider) {}
+                };
+                
+                try {
+                    locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 1000, 1, locationListener
+                    );
+                    currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    updateLocationUI();
+                } catch (SecurityException e) {
+                    Toast.makeText(this, "Erreur GPS: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+            
+            private void updateLocationUI() {
+                if (currentLocation != null) {
+                    String coords = String.format(Locale.getDefault(),
+                        "Latitude: %.6f°\nLongitude: %.6f°\nAltitude: %.2f m\nPrécision: ±%.1f m",
+                        currentLocation.getLatitude(),
+                        currentLocation.getLongitude(),
+                        currentLocation.getAltitude(),
+                        currentLocation.getAccuracy()
+                    );
+                    tvCoordinates.setText(coords);
+                } else {
+                    tvCoordinates.setText("GPS: En attente du signal...");
+                }
+            }
+            
+            private void startScanning() {
+                if (currentLocation == null) {
+                    Toast.makeText(this, "Signal GPS non disponible!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                isScanning = true;
+                scanPoints.clear();
+                
+                btnStartScan.setEnabled(false);
+                btnStopScan.setEnabled(true);
+                btnSave.setEnabled(false);
+                
+                tvStatus.setText("🔴 SCAN EN COURS");
+                
+                new Thread(() -> {
+                    while (isScanning) {
+                        captureScanPoint();
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+                
+                Toast.makeText(this, "Scan démarré! Déplacez l'appareil lentement.", 
+                    Toast.LENGTH_LONG).show();
+            }
+            
+            private void captureScanPoint() {
+                if (currentLocation == null) return;
+                
+                double x = currentLocation.getLatitude();
+                double y = currentLocation.getLongitude();
+                double z = currentLocation.getAltitude();
+                float accuracy = currentLocation.getAccuracy();
+                
+                ScanPoint point = new ScanPoint(x, y, z, accuracy, System.currentTimeMillis());
+                scanPoints.add(point);
+                
+                runOnUiThread(() -> {
+                    tvPointCount.setText("Points capturés: " + scanPoints.size());
+                });
+            }
+            
+            private void stopScanning() {
+                isScanning = false;
+                
+                btnStartScan.setEnabled(true);
+                btnStopScan.setEnabled(false);
+                btnSave.setEnabled(scanPoints.size() > 0);
+                
+                tvStatus.setText("⏸️ Scan arrêté");
+                
+                Toast.makeText(this, scanPoints.size() + " points capturés", 
+                    Toast.LENGTH_SHORT).show();
+            }
+            
+            private void saveScan() {
+                if (scanPoints.isEmpty()) {
+                    Toast.makeText(this, "Aucun point à sauvegarder", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
+                try {
+                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", 
+                        Locale.getDefault()).format(new Date());
+                    
+                    File plyFile = new File(getExternalFilesDir(null), 
+                        "scan3d_" + timestamp + ".ply");
+                    savePLY(plyFile);
+                    
+                    File csvFile = new File(getExternalFilesDir(null), 
+                        "scan3d_" + timestamp + ".csv");
+                    saveCSV(csvFile);
+                    
+                    File metaFile = new File(getExternalFilesDir(null), 
+                        "scan3d_" + timestamp + "_meta.txt");
+                    saveMetadata(metaFile);
+                    
+                    Toast.makeText(this, 
+                        "Scan sauvegardé:\n" + plyFile.getAbsolutePath(), 
+                        Toast.LENGTH_LONG).show();
+                    
+                    tvStatus.setText("✅ Scan sauvegardé (" + scanPoints.size() + " points)");
+                    
+                } catch (IOException e) {
+                    Toast.makeText(this, "Erreur: " + e.getMessage(), 
+                        Toast.LENGTH_LONG).show();
+                }
+            }
+            
+            private void savePLY(File file) throws IOException {
+                FileWriter writer = new FileWriter(file);
+                writer.write("ply\nformat ascii 1.0\n");
+                writer.write("comment Scan 3D géoréférencé\n");
+                writer.write("element vertex " + scanPoints.size() + "\n");
+                writer.write("property float x\nproperty float y\nproperty float z\n");
+                writer.write("property float accuracy\nend_header\n");
+                
+                for (ScanPoint point : scanPoints) {
+                    writer.write(String.format(Locale.US, "%.8f %.8f %.3f %.2f\n",
+                        point.x, point.y, point.z, point.accuracy));
+                }
+                writer.close();
+            }
+            
+            private void saveCSV(File file) throws IOException {
+                FileWriter writer = new FileWriter(file);
+                writer.write("latitude,longitude,altitude,accuracy,timestamp\n");
+                
+                for (ScanPoint point : scanPoints) {
+                    writer.write(String.format(Locale.US, "%.8f,%.8f,%.3f,%.2f,%d\n",
+                        point.x, point.y, point.z, point.accuracy, point.timestamp));
+                }
+                writer.close();
+            }
+            
+            private void saveMetadata(File file) throws IOException {
+                FileWriter writer = new FileWriter(file);
+                writer.write("=== SCAN 3D METADATA ===\n\n");
+                writer.write("Date: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", 
+                    Locale.getDefault()).format(new Date()) + "\n");
+                writer.write("Nombre de points: " + scanPoints.size() + "\n\n");
+                
+                if (currentLocation != null) {
+                    writer.write("Position:\n");
+                    writer.write(String.format(Locale.US, "  Lat: %.6f°\n", 
+                        currentLocation.getLatitude()));
+                    writer.write(String.format(Locale.US, "  Lon: %.6f°\n", 
+                        currentLocation.getLongitude()));
+                    writer.write(String.format(Locale.US, "  Alt: %.2f m\n", 
+                        currentLocation.getAltitude()));
+                }
+                
+                writer.write("Appareil: " + android.os.Build.MODEL + "\n");
+                writer.close();
+            }
+            
+            private static class ScanPoint {
+                double x, y, z;
+                float accuracy;
+                long timestamp;
+                
+                ScanPoint(double x, double y, double z, float accuracy, long timestamp) {
+                    this.x = x;
+                    this.y = y;
+                    this.z = z;
+                    this.accuracy = accuracy;
+                    this.timestamp = timestamp;
+                }
+            }
+        }
+        JAVAEOF
+    
+    - name: Create Layout XML
+      run: |
+        cat > app/src/main/res/layout/activity_main.xml << 'XMLEOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:background="#F5F5F5">
+        
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+        
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📱 SCAN 3D"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:padding="16dp"/>
+        
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="⏸️ Prêt"
+                    android:textSize="18sp"
+                    android:padding="16dp"
+                    android:gravity="center"
+                    android:background="#E3F2FD"
+                    android:layout_marginBottom="16dp"/>
+        
+                <TextView
+                    android:id="@+id/tvCoordinates"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="GPS: En attente..."
+                    android:textSize="14sp"
+                    android:padding="16dp"
+                    android:background="#FFFFFF"
+                    android:layout_marginBottom="16dp"/>
+        
+                <TextView
+                    android:id="@+id/tvPointCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Points: 0"
+                    android:textSize="16sp"
+                    android:padding="16dp"
+                    android:gravity="center"
+                    android:background="#FFF3E0"
+                    android:layout_marginBottom="16dp"/>
+        
+                <Button
+                    android:id="@+id/btnStartScan"
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:text="▶️ DÉMARRER"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="12dp"/>
+        
+                <Button
+                    android:id="@+id/btnStopScan"
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:text="⏸️ ARRÊTER"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="12dp"/>
+        
+                <Button
+                    android:id="@+id/btnSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:text="💾 SAUVEGARDER"
+                    android:textSize="18sp"/>
+        
+            </LinearLayout>
+        </ScrollView>
+        XMLEOF
+    
+    - name: Create Build Workflow
+      run: |
+        cat > .github/workflows/build.yml << 'WORKFLOWEOF'
+        name: Build APK
+        
+        on:
+          push:
+            branches: [ main, master ]
+          workflow_dispatch:
+        
+        jobs:
+          build:
+            runs-on: ubuntu-latest
+            
+            steps:
+            - uses: actions/checkout@v4
+            
+            - name: Set up JDK 17
+              uses: actions/setup-java@v4
+              with:
+                java-version: '17'
+                distribution: 'temurin'
+                cache: gradle
+            
+            - name: Grant execute permission
+              run: chmod +x gradlew
+            
+            - name: Build Debug APK
+              run: ./gradlew assembleDebug --stacktrace
+            
+            - name: Upload APK
+              uses: actions/upload-artifact@v4
+              with:
+                name: app-debug
+                path: app/build/outputs/apk/debug/app-debug.apk
+        WORKFLOWEOF
+    
+    - name: Commit and Push
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "🚀 Auto-generated project structure" || echo "No changes to commit"
+        git push
